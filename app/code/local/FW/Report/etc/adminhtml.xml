@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @category    FW
+ * @package     FW_Report
+ * @copyright   Copyright (c) 2014 F+W Media, Inc. (http://www.fwmedia.com)
+ * @author      J.P. Daniel <jp.daniel@fwmedia.com>
+ */
+-->
+<config>
+    <acl>
+        <resources>
+            <admin>
+                <children>
+                    <system>
+                        <children>
+                            <config>
+                                <children>
+                                    <fw_report translate="title" module="fw_report">
+                                        <title>Reports</title>
+                                        <sort_order>102</sort_order>
+                                    </fw_report>
+                                </children>
+                            </config>
+                        </children>
+                    </system>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * @category    FW
+ * @package     FW_Report
+ * @copyright   Copyright (c) 2014 F+W Media, Inc. (http://www.fwmedia.com)
+ * @author      Allen Cook <allen.cook@fwmedia.com>
+ * @author      J.P. Daniel <jp.daniel@fwmedia.com>
+ */
+-->
+<config>
+    <sections>
+        <fw_report translate="label" module="fw_admin">
+            <label>Reports</label>
+            <tab>fw_admin</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>1100</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <orderExport translate="label">
+                    <label>Order Export</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <orderexport_emailnotice translate="label tooltip comment">
+                            <label>Export Email Addresses</label>
+                            <comment>Please enter email address(es) to send this report to.</comment>
+                            <tooltip>Comma delimited for multiple addresses</tooltip>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </orderexport_emailnotice> 
+                    </fields>
+                </orderExport>
+                <fw_report_url>
+                    <label>Duplicate Urls</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <fw_report_url_email translate="label tooltip comment">
+                            <label>Send Report To</label>
+                            <comment>Please enter email address(es) to send this report to.</comment>
+                            <tooltip>Comma delimited for multiple addresses</tooltip>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>100</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>0</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </fw_report_url_email>
+                    </fields>
+                </fw_report_url>
+            </groups>
+        </fw_report>
+    </sections>
+</config>

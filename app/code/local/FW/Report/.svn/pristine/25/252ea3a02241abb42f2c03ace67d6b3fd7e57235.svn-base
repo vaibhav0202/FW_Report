@@ -1,0 +1,8 @@
+<?php
+    chdir(dirname(__FILE__));  // Change working directory to script location
+    require_once '../../../../../Mage.php';  // Include Mage
+    Mage::app('admin');  /
+
+    $reportFeed = new FW_Report_Export_Datafeed();
+    $reportFeed->exportOrders($argv[1], $argv[2], $argv[3], $argv[4]);
+?>

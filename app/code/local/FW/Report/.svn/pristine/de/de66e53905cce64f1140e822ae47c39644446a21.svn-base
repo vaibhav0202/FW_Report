@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * @category    FW
+ * @package     FW_Report
+ * @copyright   Copyright (c) 2014 F+W Media, Inc. (http://www.fwmedia.com)
+ * @author      Allen Cook <allen.cook@fwmedia.com>
+ * @author      J.P. Daniel <jp.daniel@fwmedia.com>
+ */
+-->
+<config>
+    <modules>
+        <FW_Report>
+            <version>0.1.0</version>
+        </FW_Report>
+    </modules>
+    <global>
+        <models>
+            <fw_report>
+                <class>FW_Report_Model</class>
+            </fw_report>
+        </models>
+        <helpers>
+            <fw_report>
+                <class>FW_Report_Helper</class>
+            </fw_report>
+        </helpers>
+     </global>
+    <crontab>
+        <jobs>
+            <fw_report_list_duplicate_urls>
+                <schedule>
+                    <cron_expr>0 23 * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>fw_report/url::emailDuplicateProductUrlReport</model>
+                </run>
+            </fw_report_list_duplicate_urls>
+        </jobs>
+    </crontab>
+</config>

@@ -1,0 +1,165 @@
+<?php
+/**
+ * @category    FW
+ * @package     FW_Report
+ * @copyright   Copyright (c) 2014 F+W Media, Inc. (http://www.fwmedia.com)
+ * @author      Allen Cook (allen.cook@fwmedia.com);
+ */
+ 
+class FW_Report_Export_Datafeed// extends Mage_Core_Model_Abstract
+{
+    protected $_exportFileName;
+    protected $_exportFullFileName;
+    protected $_exportDirectory;
+    protected $_errorLog;
+        
+    public function __construct()
+    {
+        $this->_exportDirectory = Mage::getBaseDir().'/feed/reports/';
+        $this->_errorLog = 'Report_Error_'.date("YmdHis", time()).'.log';
+    }
+    
+    /**
+     * Generates Order Feed File; either the previous months' data or the data that falls between the start and end date parameters
+     * 
+     */
+    public function exportOrders($startDate, $endDate, $monthly, $type)
+    {
+        try
+        {
+            $helper = Mage::helper('fw_report');
+            $subject = "Magento ".$type." Order Report";
+            $emailTo =  $helper->orderExportEmail();
+        
+            if($monthly=='1')
+            {
+                $date = new DateTime();
+                $date->modify("first day of previous month");
+                $date->modify('-1 day');
+                $startDate = $date->format("Y-m-d");
+                  
+                $date = new DateTime();
+                $date->modify("first day of this month");
+                $endDate = $date->format("Y-m-d"); 
+            }
+            
+            if(empty($emailTo))
+            {
+               exit;
+            }
+            
+            $this->_exportFileName = "MagentoOrders_".str_replace("-", "",$endDate).".txt";
+            $this->_exportFullFileName = $this->_exportDirectory.$this->_exportFileName;
+            $exportFileHandler = fopen($this->_exportFullFileName, 'w'); 
+            $fileLine = "Magento Order Id\tCreated Date\tLast Name\tFirst Name\tTotal\tTax\tQuantity\tShipping\tStore\tVista Order Id\r\n";
+            fwrite($exportFileHandler,$fileLine);
+
+            //The 5 am time adjustment is here because the database stores these transcations in UTC time and the report needs to be presented in ET
+            $order_collection = Mage::getModel('sales/order')
+            ->getCollection()
+            ->addAttributeToSelect('created_at')
+            ->addAttributeToSelect('store_id')
+            ->addAttributeToSelect('increment_id')
+            ->addAttributeToSelect('customer_lastname')
+            ->addAttributeToSelect('customer_firstname')
+            ->addAttributeToSelect('tax_amount')
+            ->addAttributeToSelect('grand_total')
+            ->addAttributeToSelect('total_qty_ordered')
+            ->addAttributeToSelect('total_qty_ordered')
+            ->addAttributeToSelect('shipping_amount')
+             ->addAttributeToSelect('vistaorder_id')
+            ->addAttributeToFilter('created_at', array(
+                'from' => $startDate.' 05:00:00',
+                'to' => $endDate.' 05:00:00'
+                ));
+            
+            foreach ($order_collection as $order)
+            {
+                //The -5 time adjustment is here because the database stores these transcations in UTC time and the report needs to be presented in ET
+                $createDate = strtotime("-5 hour",strtotime($order['created_at']));
+                $createDate = date('Y-m-d H:i:s', $createDate);
+                
+                $storeName = Mage::getModel('core/store')->load($order['store_id'])->getName();
+                $fileLine = $order['increment_id']."\t".$createDate."\t".$order['customer_lastname']."\t".$order['customer_firstname']."\t".$order['grand_total']."\t".$order['tax_amount']."\t".$order['total_qty_ordered']."\t".$order['shipping_amount']."\t".$storeName."\t".$order['vistaorder_id']."\t\r\n";
+                fwrite($exportFileHandler,$fileLine); 
+            }
+            fclose($exportFileHandler);
+            
+            unlink($this->_exportDirectory."Magento_Orders.zip");
+            $zipFile = "Magento_Orders.zip";
+            $zipFileFullFileName =  $this->_exportDirectory.$zipFile;
+                
+            $zip = new ZipArchive();
+            if($zip->open($zipFileFullFileName,$overwrite ? ZIPARCHIVE::OVERWRITE : ZIPARCHIVE::CREATE) !== true) {
+                return false;
+            }
+
+            $zip->addFile($this->_exportFullFileName, $this->_exportFileName);
+            $zip->close();
+                
+            $this->sendEmail($subject, 'Attached is the order report', $this->_exportDirectory, $zipFile, $emailTo);
+        }
+        catch (Exception $e) 
+        {
+            Mage::log("Report Error: ".$e->getMessage(),null, $this->_errorLog);
+            $this->sendErrorEmail($e->getMessage());
+        }
+    }  
+	
+    /**
+     * Send Email signifing error occured
+     */
+    public function sendErrorEmail($error)
+    {
+        //EMAIL ERROR NOTICE
+        $to = 'devTeam@fwmedia.com';
+        $subject = "Report Error";
+        $body = $error;
+        mail($to, $subject, $body);
+    }
+    
+        /**
+     * Send emaiwith report attached
+     * @param $subject string
+     * @param $bodyMsg string
+	 * @param $filePath string
+	 * @param $file string
+     */
+    private function sendEmail($subject, $bodyMsg, $filePath, $file, $emailTo)
+    {
+        $email_from = "Magento";
+        $fileatt = $filePath.$file; // full Path to the file 
+        $fileatt_type = "application/text"; // File Type 
+
+        $to =  $emailTo;
+        $subject = $subject;
+        $fileatt_name = $file;
+        $file = fopen($fileatt,'rb'); 
+        $data = fread($file,filesize($fileatt)); 
+        fclose($file); 
+        $semi_rand = md5(time()); 
+        $mime_boundary = "==Multipart_Boundary_x{$semi_rand}x"; 
+        $headers = "From:".$email_from;
+        $headers .= "\nMIME-Version: 1.0\n" . 
+                "Content-Type: multipart/mixed;\n" . 
+                " boundary=\"{$mime_boundary}\""; 
+        $email_message = $bodyMsg;
+        $email_message .= "This is a multi-part message in MIME format.\n\n" . 
+                "--{$mime_boundary}\n" . 
+                "Content-Type:text/html; charset=\"iso-8859-1\"\n" . 
+                "Content-Transfer-Encoding: 7bit\n\n" . 
+        $email_message .= "\n\n"; 
+        $data = chunk_split(base64_encode($data)); 
+        $email_message .= "--{$mime_boundary}\n" . 
+                "Content-Type: {$fileatt_type};\n" . 
+                " name=\"{$fileatt_name}\"\n" . 
+                "Content-Transfer-Encoding: base64\n\n" . 
+                $data .= "\n\n" . 
+                "--{$mime_boundary}--\n"; 
+
+        //Send email
+        $ok = @mail($to, $subject, $email_message, $headers); 
+    }
+}
+
+
